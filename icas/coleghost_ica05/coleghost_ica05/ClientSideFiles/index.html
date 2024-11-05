@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cole Ghostkeeper ICA05</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="script.js"></script>
+</head>
+<body>
+    <div id="outer" class="centered">
+        <header><h1>ICA05 Cole Ghostkeeper</h1></header>
+        <div id="inner" class="centered">
+            <div id="welcome-div" class="centered">
+                <h1 id="welcome"></h1>
+            </div>
+            <div>Select Location
+                <select name="select-location" id=""></select>
+            </div>
+            <div id="items-div"><h2>Menu Items</h2></div>
+            <div id="post-div">
+                <h2>Order Details</h2>
+                <label for="tbName">
+                    Name: <input type="text" name="tbName" id="" placeholder="Enter your name">
+                </label>
+                <br>
+                <label for="selectItem">
+                    Item: <select name="selectItem" id=""></select>
+                </label>
+                <br>
+                <label for="numberAmount">
+                    Amount: <input type="number" name="numberAmount" id="">
+                </label>
+                <br>
+                <label for="selectPaymentType">
+                    Payment Type:
+                    <select name="selectPaymentType" id="">
+                        <option value="Debit">Debit</option>
+                        <option value="Credit">Credit</option>
+                        <option value="Cash">Cash</option>
+                    </select>
+                </label>
+                <br>
+                <input type="submit" value="Submit" id="btn-post">
+                <p id="status"></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

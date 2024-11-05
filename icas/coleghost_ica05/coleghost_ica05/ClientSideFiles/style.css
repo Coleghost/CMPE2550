@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Ubuntu+Mono&display=swap');
+body, html{
+    background-color: rgb(77, 18, 18);
+    color: rgb(255, 255, 255);
+    font-family: "Ubuntu Mono", sans-serif;
+}
+/* CLASSES */
+.centered{
+    text-align: center;
+}
+/* STYLE BY ELEMENT TYPE */
+header{
+    font-family: "Bebas Neue", sans-serif;
+}
+select {
+    font-family: "Ubuntu Mono", sans-serif;
+    padding: 8px;
+    border: 1px solid #ddd;
+    background-color: rgb(40, 1, 8);
+    color: white;
+    border-radius: 4px;
+    margin: 5px 0;
+}
+input[type='submit']{
+    width: 100px;
+    color: White;
+    background-color: rgb(40, 1, 8);
+    border: none;
+    border-radius: 5px;
+    font-family: "Ubuntu Mono", sans-serif;
+    cursor: pointer;
+}
+/* STYLE BY ID */
+#outer{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+#inner{
+    display: flex;
+    flex-direction: column;
+    width: 80%;
+}
+#welcome{
+    font-family: "Bebas Neue", sans-serif;
+}

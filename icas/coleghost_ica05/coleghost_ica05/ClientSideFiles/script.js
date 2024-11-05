@@ -25,7 +25,7 @@ window.onload = function (){
             li.html(`${item} : $${json.items[item]}`);
             list.append(li);
             let option = $("<option>").attr({
-                "value" : json.items[item]
+                "value" : item
             }).text(item);
             $("select[name='selectItem']").append(option);
         });
@@ -35,11 +35,12 @@ window.onload = function (){
     $("#btn-post").click(()=>{
         $("#status").html("");
         let data = {};
-        data.name = $("input[name='tbName']").val();
-        data.item = $("select[name='selectItem']").val();
-        data.amount = $("input[name='numberAmount']").val();
-        data.payment = $("select[name='selectPaymentType']").val();
-        if (!data.name || !data.item || !data.amount || !data.payment) {
+        data.tbName = $("input[name='tbName']").val();
+        data.Location = $("select[name='select-location']").val()
+        data.selectItem = $("select[name='selectItem']").val();
+        data.numberAmount = $("input[name='numberAmount']").val();
+        data.selectPaymentType = $("select[name='selectPaymentType']").val();
+        if (!data.tbName || !data.Location || !data.selectItem || !data.numberAmount || !data.selectPaymentType) {
             $("#status").html("Please fill in all fields");
             return;
         }
@@ -50,7 +51,16 @@ window.onload = function (){
 }
 
 function PostSuccess(json){
-
+    div = $("#order-details");
+    div.html("");
+    div.append(`<h3>Thank you ${json.name} for placing this order</h3>`);
+    let ol = $("<ol>");
+    ol.append(`<li>Pick Up location: ${json.location}</li>`);
+    ol.append(`<li>Item Ordered: ${json.item}</li>`);
+    ol.append(`<li>Amount: ${json.amount}</li>`);
+    ol.append(`<li>Payment Type: ${json.paymentType}</li>`);
+    div.append(ol);
+    div.append(`<p>Your order will be ready in ${json.eta} minutes</p>`);
 }
 
 // Use this function to make an ajax call

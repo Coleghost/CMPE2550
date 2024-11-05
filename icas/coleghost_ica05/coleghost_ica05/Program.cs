@@ -3,7 +3,7 @@ namespace coleghost_ica05
     public class Program
     {
         public static Random random = new Random();
-        record Data(string tbName, string selectItem, int numberAmount, string selectPaymentType);
+        record Data(string tbName, string Location, string selectItem, int numberAmount, string selectPaymentType);
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
@@ -30,14 +30,15 @@ namespace coleghost_ica05
 
             app.MapPost("/submit", (Data data) =>
             {
-                return new
+                return Results.Json(new
                 {
                     Name = data.tbName,
+                    data.Location,
                     Item = data.selectItem,
                     Amount = data.numberAmount,
                     PaymentType = data.selectPaymentType,
                     Eta = random.Next(5, 31)
-                };
+                });
             });
             app.Run();
         }

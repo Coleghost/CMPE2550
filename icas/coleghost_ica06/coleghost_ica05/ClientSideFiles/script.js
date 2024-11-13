@@ -36,16 +36,19 @@ window.onload = function (){
     $("#btn-post").click(()=>{
         $("#status").html("");
         let data = {};
+        // grab data from ui
         data.tbName = $("input[name='tbName']").val();
         data.Location = $("select[name='select-location']").val()
         data.selectItem = $("select[name='selectItem']").val();
         data.numberAmount = $("input[name='numberAmount']").val();
         data.selectPaymentType = $("select[name='selectPaymentType']").val();
+        // null check data
         if (!data.tbName || !data.Location || !data.selectItem || !data.numberAmount || !data.selectPaymentType) {
             $("#status").html("Please fill in all fields");
             return;
         }
-        else{
+        else {
+            // if all data is good make the call
             AjaxRequest(url + "submit", "POST", data, "JSON", PostSuccess, ErrorHandler);
         }
     });

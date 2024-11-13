@@ -13,11 +13,15 @@ namespace coleghost_ica05
             // allow the web service to be called from any website, local or live server
             app.UseCors(x => x.AllowAnyMethod().AllowAnyHeader().SetIsOriginAllowed(origin => true));
 
+            // Send a welcome message to the client side on page load
             app.MapGet("/", () => new { message = "Welcome to Tims!" });
 
+            // Send data from server to client 
             app.MapPost("/", () => new
             {
+                // an array of strings containing the locations
                 locations = new string[] { "Bytes Location", "CAT Location", "Kingsway", "West Ed" },
+                // a dictionary of menu items with pricing
                 items = new Dictionary<string, double> {
                     { "Muffins", 3.29},
                     { "Croissants", 2.19 },
@@ -28,8 +32,11 @@ namespace coleghost_ica05
                 }
             });
 
+            // target the form submit endpoint
             app.MapPost("/submit", (Data data) =>
             {
+                // send back data to client side as a json encoded Data object
+                // the keys of the data from client side must match the keys of data
                 return Results.Json(new
                 {
                     Name = data.tbName,

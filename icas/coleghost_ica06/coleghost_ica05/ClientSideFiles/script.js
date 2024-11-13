@@ -32,6 +32,7 @@ window.onload = function (){
         $("#items-div").append(list);
     }, ErrorHandler);
 
+    // on submit send data to the server
     $("#btn-post").click(()=>{
         $("#status").html("");
         let data = {};
@@ -50,6 +51,8 @@ window.onload = function (){
     });
 }
 
+// On a successfull submit update the UI
+// json -> a json object from the server side
 function PostSuccess(json){
     div = $("#order-details");
     div.html("");

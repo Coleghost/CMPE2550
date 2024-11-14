@@ -12,7 +12,18 @@ body, html{
 header{
     font-family: "Bebas Neue", sans-serif;
 }
-
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+    text-align: left;
+}
+table th, table td {
+    border: 1px solid #ddd;
+}
+td{
+    width: 15px;
+}
 /* STYLE BY ID */
 #outer{
     display: flex;
@@ -24,4 +35,15 @@ header{
     display: flex;
     flex-direction: column;
     width: 80%;
+    gap: 20px;
 }
+#controls-div{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+#game-board-div{
+    flex-direction: column;
+    gap: 20px;
+}
+

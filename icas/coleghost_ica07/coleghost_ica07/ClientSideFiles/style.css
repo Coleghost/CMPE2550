@@ -46,4 +46,11 @@ td{
     flex-direction: column;
     gap: 20px;
 }
+#img-div {
+    display: grid;
+    grid-template-columns: repeat(65, 1fr);
+}
+#image{
+    grid-column: 28 / 38;
+}
 

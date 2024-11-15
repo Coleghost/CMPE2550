@@ -1,4 +1,4 @@
-const url = "https://localhost:7171/";
+const url = "http://localhost:5218/";
 
 window.onload = function(){
     MakeTable();
@@ -20,6 +20,22 @@ window.onload = function(){
         let data = {};
         AjaxRequest(url + "pull", "POST", data, "json", PullHandler, ErrorHandler);
     });
+
+    $("#quit-game-btn").click(()=>{
+        let data = {};
+        AjaxRequest(url + "quit", "POST", data, "json", QuitGameHandler, ErrorHandler);
+    });
+}
+
+// This function updates the image in the grid
+// according to the difference in roles
+function MoveImage(net){
+    net *= -1;// invert the differnce to move the correct way
+    let col = $("#image").css("grid-column"); // grab the current position
+    // update the grid pos
+    $("#image").css({
+        "grid-column" : `${Number(col) + Number(net)}`
+    });
 }
 
 // Handles start game request
@@ -30,6 +46,10 @@ function StartGameHandler(json){
         $("#game-board-div").css({
             "style" : "flex"
         }).show();
+        // place the image
+        $("#image").css({
+            "grid-column" : json.pit
+        });
     }
     else{
         // update the status
@@ -37,6 +57,9 @@ function StartGameHandler(json){
     }
 }
 
+// Handles Ajax request from pull button
+// updates the ui
+// and moves the image
 function PullHandler(json){
     // handle the json response
     if(json.status == "win"){
@@ -45,8 +68,21 @@ function PullHandler(json){
     else if(json.status == "draw"){
         StatusUpdate("draw", undefined, message = `Turn limit reached, take a break!`);
     }
-    else{
-        StatusUpdate("continue", undefined, message = `Player1 rolled: ${json.p1roll}<br>Player2 rolled: ${json.p2roll}`);
+    else if (json.status == "continue"){
+        StatusUpdate("continue", undefined, message = `${json.player1} rolled: ${json.p1roll}<br>${json.player2} rolled: ${json.p2roll}`);
+        MoveImage(Number(json.p1roll) - Number(json.p2roll));
+    }
+}
+
+// handle an ajax request to quit the game
+// updates the status and clears the ui
+function QuitGameHandler(json){
+    if(json.status == "success"){
+        StatusUpdate("quitGame");
+        // clear the ui
+        $("#player-one-tb").val("");
+        $("#player-two-tb").val("");
+        $("#game-board-div").hide();
     }
 }
 
@@ -88,6 +124,9 @@ function StatusUpdate(action, status = $("#status"), message = null){
             break;
         case "continue":
             status.html(message);
+            break;
+        case "quitGame":
+            status.html("Enter Player Names:<br>");
             break;
     }
 }

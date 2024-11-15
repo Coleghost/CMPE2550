@@ -16,6 +16,7 @@ namespace coleghost_ica07
         static string Player1Name = "";
         static string Player2Name = "";
         static int Turns = 0;
+        static bool Running = false;
 
 
 
@@ -40,7 +41,8 @@ namespace coleghost_ica07
                     StartGame(p1, p2);
                     return Results.Json(new
                     {
-                        status = "success"
+                        status = "success",
+                        pit = Pit
                     });
                 }
                 else
@@ -53,8 +55,16 @@ namespace coleghost_ica07
                 }
             });
 
+            // handle pull button endpoint
             app.MapPost("/pull", () =>
             {
+                if (!Running)
+                {
+                    return Results.Json(new
+                    {
+                        status = "gameover"
+                    });
+                }
                 Turns++; // increment turns
                 int roll1 = random.Next(1, 6);
                 int roll2 = random.Next(1, 6);
@@ -62,22 +72,24 @@ namespace coleghost_ica07
                 // roll 2 was greater
                 if (diff < 0)
                 {
-                    // move both players left
-                    Player1 -= diff;
-                    Player2 -= diff;
+                    // move both players right
+                    Player1 += Math.Abs(diff);
+                    Player2 += Math.Abs(diff);
                 }
                 // roll 1 was greater
                 else
                 {
-                    // move both players to the right
-                    Player1 += diff;
-                    Player2 += diff;
+                    // move both players to the left
+                    Player1 -= diff;
+                    Player2 -= diff;
                 }
 
                 int state = CheckWin();
 
+                // return json data according to the state of the game
                 if (state == -1)
                 {
+                    Running = false;
                     return Results.Json(new
                     {
                         status = "win",
@@ -86,6 +98,7 @@ namespace coleghost_ica07
                 }
                 else if (state == 1)
                 {
+                    Running = false;
                     return Results.Json(new
                     {
                         status = "win",
@@ -94,6 +107,7 @@ namespace coleghost_ica07
                 }
                 else if (Turns == 31)
                 {
+                    Running = false;
                     return Results.Json(new
                     {
                         status = "draw"
@@ -104,13 +118,25 @@ namespace coleghost_ica07
                     return Results.Json(new
                     {
                         status = "continue",
+                        player1 = Player1Name,
                         p1roll = roll1,
                         p1pos = Player1,
+                        player2 = Player2Name,
                         p2roll = roll2,
                         p2pos = Player2,
                         turns = Turns
                     });
                 }
+            });
+
+            // handle quit button endpoint
+            app.MapPost("/quit", () =>
+            {
+                ResetGame();
+                return Results.Json(new
+                {
+                    status = "success"
+                });
             });
             app.Run();
         }
@@ -126,10 +152,12 @@ namespace coleghost_ica07
         {
             if (Player1 >= Pit)
             {
+                Running = false;
                 return -1;
             }
             else if (Player2 <= Pit)
             {
+                Running = false;
                 return 1;
             }
             else
@@ -150,8 +178,13 @@ namespace coleghost_ica07
             Player1Name = name1;
             Player2Name = name2;
             Turns = 0; // reset turns
+            Running = true;
         }
 
+
+        /// <summary>
+        /// Reset game variables
+        /// </summary>
         public static void ResetGame()
         {
             // put the players equal distance away from the pit on either end

@@ -1,6 +1,15 @@
-
+var url = "https://localhost:7242/";
 window.onload = function(){
+    GetStudents();
+}
 
+function GetStudents(){
+    let data = {};
+    AjaxRequest(url + "retrieveData", "GET", data, "JSON", GetStudentsCallBack, ErrorHandler);
+}
+
+function GetStudentsCallBack(json){
+    
 }
 
 // Use this function to make an ajax call

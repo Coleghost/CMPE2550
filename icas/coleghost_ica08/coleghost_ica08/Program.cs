@@ -1,9 +1,12 @@
 using Microsoft.Data.SqlClient;
+using System.Net;
+using System.Text;
 
 namespace coleghost_ica08
 {
     public class Program
     {
+        record Data ( int id );
         public static void Main(string[] args)
         {
             // set up builder and controllers
@@ -40,8 +43,52 @@ namespace coleghost_ica08
                 connection.Close();
                 return Results.Json(new
                 {
-                    status = "Success",
+                    status = "success",
                     students
+                });
+            });
+
+            app.MapPost("retrieveClassData", (Data data) =>
+            {
+                SqlConnection connection = new SqlConnection(connectionString);
+                connection.Open();
+                StringBuilder query = new StringBuilder();
+                query.Append(
+                    "SELECT " +
+                    "c.class_id AS ClassId, " +
+                    "c.class_desc AS ClassDesc, " +
+                    "c.days AS Days, " +
+                    "c.start_date AS StartDate, " +
+                    "i.instructor_id AS InstructorId, " +
+                    "i.first_name AS InstructorFirstName, " +
+                    "i.last_name AS InstructorLastName " +
+                    "FROM Students s " +
+                    "JOIN class_to_student cs ON s.student_id = cs.student_id " +
+                    "JOIN Classes c ON cs.class_id = c.class_id " +
+                    "JOIN Instructors i ON c.instructor_id = i.instructor_id " +
+                    "WHERE s.student_id = @StudentId"
+                );
+                SqlCommand command = new SqlCommand(query.ToString(), connection);
+                command.Parameters.AddWithValue("@StudentId", data.id);
+                SqlDataReader reader = command.ExecuteReader();
+                var classes = new List<ClassData>();
+                while (reader.Read())
+                {
+                    classes.Add(new ClassData(
+                        reader["ClassId"],
+                        reader["ClassDesc"],
+                        reader["Days"],
+                        reader["StartDate"],
+                        reader["InstructorId"],
+                        reader["InstructorFirstName"],
+                        reader["InstructorLastName"]
+                    ));
+                }
+                connection.Close();
+                return Results.Json(new
+                {
+                    status = "success",
+                    classes
                 });
             });
             app.Run();
@@ -61,5 +108,28 @@ namespace coleghost_ica08
             FirstName = (string)firstname;
             SchoolId = (int)schoolid;
         }
+    }
+
+    public class ClassData
+    {
+        public int ClassId { get; set; }
+        public string ClassDesc { get; set; }
+        public int Days { get; set; }
+        public DateTime StartDate { get; set; }
+        public int InstructorId { get; set; }
+        public string InstructorFirstName { get; set; }
+        public string InstructorLastName { get; set; }
+
+        public ClassData(object classId, object classDesc, object days, object startDate, object instructorId, object instructorFirstName, object instructorLastName)
+        {
+            ClassId = (int)classId;
+            ClassDesc = (string)classDesc;
+            Days = days == DBNull.Value ? 0 : (int)days;
+            StartDate = (DateTime)startDate;
+            InstructorId = (int)instructorId;
+            InstructorFirstName = (string)instructorFirstName;
+            InstructorLastName = (string)instructorLastName;
+        }
+
     }
 }

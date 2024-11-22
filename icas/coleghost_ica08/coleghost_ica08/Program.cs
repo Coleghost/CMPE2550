@@ -20,6 +20,7 @@ namespace coleghost_ica08
             // define the connection string
             string connectionString = "Server = data.cnt.sast.ca,24680; Database = ClassTrak; User Id = demoUser; Password = temP2020#; Encrypt = False;";
 
+            // Hanle the retrieve data endpoint
             app.MapGet("/retrieveData",() =>
             {
                 // Step 1: Establish a connection to DB
@@ -35,12 +36,14 @@ namespace coleghost_ica08
                 // step 5: run query
                 SqlDataReader reader = command.ExecuteReader();
                 var students = new List<Student>();
+                // read each row from the query at a time
                 while (reader.Read())
                 {
-                    var id = reader["student_id"];
+                    // add a new student to the list
                     students.Add(new Student(reader["student_id"], reader["last_name"], reader["first_name"], reader["school_id"]));
                 }
                 connection.Close();
+                // return json data to client side
                 return Results.Json(new
                 {
                     status = "success",
@@ -48,10 +51,12 @@ namespace coleghost_ica08
                 });
             });
 
+            // This endpoint returns a json object containing class information for a specific student
             app.MapPost("retrieveClassData", (Data data) =>
             {
                 SqlConnection connection = new SqlConnection(connectionString);
                 connection.Open();
+                // build the query
                 StringBuilder query = new StringBuilder();
                 query.Append(
                     "SELECT " +
@@ -95,6 +100,9 @@ namespace coleghost_ica08
         }
     }
 
+    /// <summary>
+    /// This class represents a student in the ClassTrak database
+    /// </summary>
     public class Student
     {
         public int StudentId { get; set; }
@@ -110,6 +118,9 @@ namespace coleghost_ica08
         }
     }
 
+    /// <summary>
+    /// This class class information from classtrak database
+    /// </summary>
     public class ClassData
     {
         public int ClassId { get; set; }

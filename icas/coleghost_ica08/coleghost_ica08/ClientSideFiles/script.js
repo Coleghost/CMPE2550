@@ -8,6 +8,8 @@ function GetStudents(){
     AjaxRequest(url + "retrieveData", "GET", data, "JSON", GetStudentsCallBack, ErrorHandler);
 }
 
+// Success function for on load ajax request
+// creates the student table
 function GetStudentsCallBack(json){
     let table = $("<table>").attr({
         "id" : "student-table"
@@ -47,6 +49,7 @@ function RetrieveClickEvent(ev){
     AjaxRequest(url + "retrieveClassData", "POST", data, "JSON", GetClassCallBack, ErrorHandler);
 }
 
+// This function populates a class information table
 function GetClassCallBack(json){
     // Clear the existing table content
     $("#class-table").empty();

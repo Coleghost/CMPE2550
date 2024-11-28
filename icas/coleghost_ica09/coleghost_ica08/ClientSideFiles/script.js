@@ -35,6 +35,19 @@ function GetStudentsCallBack(json){
         tr.append(btntd);
         let tds = $(`<td>${json.students[i].studentId}</td><td>${json.students[i].lastName}</td><td>${json.students[i].firstName}</td><td>${json.students[i].schoolId}</td>`);
         tr.append(tds);
+        // Generate the Action Buttons
+        let actionTd = $("<td>");
+        let deleteBtn = $("<button>").attr({
+            "class" : "delete-btn",
+            "id" : json.students[i].studentId
+        }).html("Delete");
+        actionTd.append(deleteBtn);
+        let editBtn = $("<button>").attr({
+            "class" : "edit-btn",
+            "id" : json.students[i].studentId
+        }).html("Edit");
+        actionTd.append(editBtn);
+        tr.append(actionTd);
         tbody.append(tr);
     }    
     table.append(tbody);

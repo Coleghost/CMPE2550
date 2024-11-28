@@ -15,7 +15,7 @@ namespace coleghost_ica09
             var app = builder.Build();
             app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowed(origin => true));
 
-            app.MapGet("/", () => "COLE GHOSTKEEPER ICA08");
+            app.MapGet("/", () => "COLE GHOSTKEEPER ICA09");
 
             // define the connection string
             string connectionString = "Server = data.cnt.sast.ca,24680; Database = ClassTrak; User Id = demoUser; Password = temP2020#; Encrypt = False;";

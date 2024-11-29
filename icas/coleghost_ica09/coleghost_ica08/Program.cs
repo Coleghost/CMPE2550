@@ -96,6 +96,52 @@ namespace coleghost_ica09
                     classes
                 });
             });
+
+            app.MapGet("/deleteStudent/{id}", (int id) =>
+            {
+                SqlConnection connection = new SqlConnection(connectionString);
+                connection.Open();
+
+                string query = "DELETE FROM Students WHERE student_id = @StudentId"; 
+                SqlCommand command = new SqlCommand(query, connection); // create command object with query and connection string
+
+                command.Parameters.AddWithValue("@StudentId", id); // bind param to query
+
+                int rowsAffected = command.ExecuteNonQuery(); // gets the rows affected and executes query
+                connection.Close();
+                return Results.Json(new
+                {
+                    status = rowsAffected > 0 ? "success" : "error",
+                    message = rowsAffected > 0 ? "Student deleted successfully" : "Student not found"
+                });
+            });
+
+            app.MapGet("updateStudent/{id}/{fName}/{lName}/{schoolId}", (int id, string fName, string lName, int schoolId) =>
+            {
+                if (fName == null || lName == null || schoolId <= 0)
+                {
+                    return Results.Json(new
+                    {
+                        status = "error",
+                        messasge = "Invalid arguments"
+                    });
+                }
+                SqlConnection connection = new SqlConnection(connectionString);
+                connection.Open();
+                string query = "UPDATE Students SET first_name = @fName, last_name = @lName, school_id = @schoolId where student_id = @studentId";
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@fName", fName);
+                command.Parameters.AddWithValue("@lName", lName);
+                command.Parameters.AddWithValue("@schoolId", schoolId);
+                command.Parameters.AddWithValue("@studentId", id);
+                int rowsAffected = command.ExecuteNonQuery(); // gets the rows affected and executes query
+                connection.Close();
+                return Results.Json(new
+                {
+                    status = rowsAffected > 0 ? "success" : "error",
+                    message = rowsAffected > 0 ? "Student Updated successfully" : "Student not found"
+                });
+            });
             app.Run();
         }
     }

@@ -41,11 +41,13 @@ function GetStudentsCallBack(json){
             "class" : "delete-btn",
             "id" : json.students[i].studentId
         }).html("Delete");
+        deleteBtn.click(DeleteClickEvent);
         actionTd.append(deleteBtn);
         let editBtn = $("<button>").attr({
             "class" : "edit-btn",
             "id" : json.students[i].studentId
         }).html("Edit");
+        editBtn.click(EditClickEvent);
         actionTd.append(editBtn);
         tr.append(actionTd);
         tbody.append(tr);
@@ -60,6 +62,87 @@ function RetrieveClickEvent(ev){
     let data = {};
     data.id = id;
     AjaxRequest(url + "retrieveClassData", "POST", data, "JSON", GetClassCallBack, ErrorHandler);
+}
+
+function DeleteClickEvent(ev){
+    let id = ev.target.id;
+    let data = {};
+    let row = $(ev.target).closest("tr"); // Find the closest table row
+    AjaxRequest(url + `deleteStudent/${id}`, "POST", data, "JSON", function(json){
+        if (json.success) {
+            row.remove(); // Remove the row from the table
+            $("#student-table-status").html(`Deleted student with ID: ${id}`);
+        } 
+        else {
+            $("#student-table-status").html(`Failed to delete student with ID: ${id}`);
+        }
+    }, ErrorHandler);
+}
+
+function EditClickEvent(ev){
+    let id = ev.target.id;
+    let row = $(ev.target).closest("tr"); // Find the closest table row
+    let original = [];
+
+    row.find('td').each(function(index){
+        if (index == 2 || index == 3 || index == 4) {
+            let currentText = $(this).text();
+            original.push(currentText); // Store the original content
+            let input = $('<input>', {
+                type: 'text',
+                value: currentText
+            });
+            $(this).html(input); // apend the input tb
+        } 
+        else {
+            original.push(null); // push null to keep indices the same
+        }
+    });
+
+    // create and implement the update button
+    let updateBtn = $(".edit-btn");
+    updateBtn.html("Update");
+    updateBtn.off('click').on('click', function(){
+        let data = {};
+        let fName = null;
+        let lName = null;
+        let schoolId = null;
+        row.find('td').each(function(index){
+            let input = $(this).find('input');
+            if(index == 2){
+                fName = input.val();
+            }
+            else if(index == 3){
+                lName = input.val();
+            }
+            else if(index == 4){
+                schoolId = input.val();
+            }
+        });
+        AjaxRequest(url + `updateStudent/${id}/${fName}/${lName}/${schoolId}`, "POST", data, "JSON", UpdateStudentCallBack, ErrorHandler);
+    });
+
+    // create and impletement the cancel button
+    let cancelBtn = $(ev.target);
+    cancelBtn.html("Cancel");
+    cancelBtn.off('click').on('click', function(){
+        row.find('td').each(function(index){
+            if (index == 2 || index == 3 || index == 4) {
+                $(this).html(original[index]); // Restore the original content
+            }
+        });
+        cancelBtn.html("Edit"); 
+        cancelBtn.off('click').on('click', EditClickEvent); // Rebind the original click event
+    });
+}
+
+function UpdateStudentCallBack(json){
+    if(json.status == "success"){
+
+    }
+    else{
+
+    }
 }
 
 // This function populates a class information table

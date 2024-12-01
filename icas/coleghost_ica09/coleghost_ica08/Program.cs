@@ -108,17 +108,23 @@ namespace coleghost_ica09
 
                 try
                 {
-                    // Delete student from Student Table
-                    string query1 = "DELETE FROM Students WHERE student_id = @StudentId";
-                    SqlCommand command = new SqlCommand(query1, connection); // create command object with query and connection string
-                    command.Parameters.AddWithValue("@StudentId", id); // bind param to query
-                    int rowsAffected = command.ExecuteNonQuery(); // gets the rows affected and executes query
+                    // Delete student from class_to_student table first
+                    string query1 = "DELETE FROM class_to_student WHERE student_id = @StudentId";
+                    SqlCommand command1 = new SqlCommand(query1, connection, transaction); // associate command with transaction
+                    command1.Parameters.AddWithValue("@StudentId", id); // bind param to query
+                    command1.ExecuteNonQuery(); // execute query
 
-                    // Delete student from class_to_student table
-                    string query2 = "DELETE FROM class_to_student WHERE student_id = @StudentId";
-                    command = new SqlCommand(query2, connection);
-                    command.Parameters.AddWithValue("@StudentId", id);
-                    command.ExecuteNonQuery();
+                    // Delete student from Results table 
+                    string query3 = "DELETE FROM Results WHERE student_id = @StudentId";
+                    SqlCommand command3 = new SqlCommand(query3, connection, transaction); // associate command with transaction
+                    command3.Parameters.AddWithValue("@StudentId", id); // bind param to query
+                    command3.ExecuteNonQuery(); // execute query
+
+                    // Delete student from Students table
+                    string query2 = "DELETE FROM Students WHERE student_id = @StudentId";
+                    SqlCommand command2 = new SqlCommand(query2, connection, transaction); // associate command with transaction
+                    command2.Parameters.AddWithValue("@StudentId", id); // bind param to query
+                    int rowsAffected = command2.ExecuteNonQuery(); // execute query
 
                     // commit transaction
                     transaction.Commit();
@@ -136,7 +142,7 @@ namespace coleghost_ica09
                     return Results.Json(new
                     {
                         status = "error",
-                        message = "An Error occured while deleting the student" + e.Message
+                        message = "An Error occured while deleting the student: " + e.Message
                     });
                 }
             });
@@ -151,22 +157,79 @@ namespace coleghost_ica09
                         messasge = "Invalid arguments"
                     });
                 }
+
+                // start transaction to update a student
                 SqlConnection connection = new SqlConnection(connectionString);
                 connection.Open();
-                string query = "UPDATE Students SET first_name = @fName, last_name = @lName, school_id = @schoolId where student_id = @studentId";
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@fName", fName);
-                command.Parameters.AddWithValue("@lName", lName);
-                command.Parameters.AddWithValue("@schoolId", schoolId);
-                command.Parameters.AddWithValue("@studentId", id);
-                int rowsAffected = command.ExecuteNonQuery(); // gets the rows affected and executes query
-                connection.Close();
-                return Results.Json(new
+                SqlTransaction transaction = connection.BeginTransaction();
+
+                try
                 {
-                    status = rowsAffected > 0 ? "success" : "error",
-                    message = rowsAffected > 0 ? "Student Updated successfully" : "Student not found"
-                });
+                    string query = "UPDATE Students SET first_name = @fName, last_name = @lName, school_id = @schoolId where student_id = @studentId";
+                    SqlCommand command = new SqlCommand(query, connection, transaction);
+                    command.Parameters.AddWithValue("@fName", fName);
+                    command.Parameters.AddWithValue("@lName", lName);
+                    command.Parameters.AddWithValue("@schoolId", schoolId);
+                    command.Parameters.AddWithValue("@studentId", id);
+                    int rowsAffected = command.ExecuteNonQuery(); // gets the rows affected and executes query
+
+                    // commit transaction
+                    transaction.Commit();
+                    connection.Close();
+                    return Results.Json(new
+                    {
+                        status = rowsAffected > 0 ? "success" : "error",
+                        message = rowsAffected > 0 ? "Student Updated successfully" : "Student not found"
+                    });
+                }
+                catch (Exception e)
+                {
+                    transaction.Rollback();
+                    connection.Close();
+                    return Results.Json(new
+                    {
+                        status = "error",
+                        message = "An Error occured while updating the student: " + e.Message
+                    });
+                }
             });
+
+            app.MapGet("getAllClassData", () =>
+            {
+                SqlConnection connection = new SqlConnection(connectionString);
+                connection.Open();
+                try
+                {
+                    string query = "SELECT * FROM Classes";
+                    SqlCommand command = new SqlCommand(query, connection);
+                    SqlDataReader reader = command.ExecuteReader();
+                    var classes = new List<SimpleClassData>();
+                    while (reader.Read())
+                    {
+                        classes.Add(new SimpleClassData(
+                            reader["class_id"],
+                            reader["class_desc"],
+                            reader["days"],
+                            reader["start_date"]
+                        ));
+                    }
+                    connection.Close();
+                    return Results.Json(new
+                    {
+                        status = "success",
+                        classes
+                    });
+                }
+                catch (Exception e)
+                {
+                    return Results.Json(new
+                    {
+                        status = "error",
+                        message = "An error occurred while getting class data: " + e.Message
+                    });
+                }
+            });
+
             app.Run();
         }
     }
@@ -213,5 +276,24 @@ namespace coleghost_ica09
             InstructorLastName = (string)instructorLastName;
         }
 
+    }
+
+    /// <summary>
+    /// This class contains data from Classes table in classtrak
+    /// </summary>
+    public class SimpleClassData
+    {
+        public int ClassId { get; set; }
+        public string ClassDesc { get; set; }
+        public int Days { get; set; }
+        public DateTime StartDate { get; set; }
+
+        public SimpleClassData(object classId, object classDesc, object days, object startDate)
+        {
+            ClassId = (int)classId;
+            ClassDesc = (string)classDesc;
+            Days = days == DBNull.Value || days == "" ? 0 : (int)days;
+            StartDate = (DateTime)startDate;
+        }
     }
 }

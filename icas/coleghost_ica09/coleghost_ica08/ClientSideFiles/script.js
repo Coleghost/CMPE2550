@@ -1,6 +1,38 @@
 var url = "https://localhost:7242/";
 window.onload = function(){
     GetStudents();
+    CreateClassSelect();
+    $("#add-student-btn").click(function(ev){
+        let data = {};
+        data.fName = $("input-first-name").val();
+        data.lName = $("input-last-name").val();
+        data.schoolId = $("input-school-id").val();
+        let selectedOptions = $("#select-class option:selected");
+        data.selectedValues = [];
+        selectedOptions.each(function() {
+            data.selectedValues.push($(this).val());
+        });
+        AjaxRequest(url + "retrieveData", "GET", data, "JSON", AddStudentCallBack, ErrorHandler);
+    });
+}
+
+function AddStudentCallBack(json){
+
+}
+
+function CreateClassSelect(){
+    let data = {};
+    AjaxRequest(url + "getAllClassData", "GET", data, "JSON", function(json){
+        let select = $("#select-class");
+        // classId classDesc
+        for(let i = 0; i, json.classes.length; i++){
+            let option = $("<option>").attr({
+                "value" : json.classes[i].classId
+                }
+            ).html(json.classes[i].classDesc);
+            select.append(option);
+        }
+    }, ErrorHandler);
 }
 
 function GetStudents(){
@@ -17,7 +49,7 @@ function GetStudentsCallBack(json){
     // create table head
     let th = $("<thead>");
     let thtr = $("<tr>");
-    let thtds = $("<th>Get Students</th><th>Student ID</th><th>First Name</th><th>Last Name</th><th>School ID</th>");
+    let thtds = $("<th>Get Students</th><th>Student ID</th><th>Last Name</th><th>First Name</th><th>School ID</th>");
     thtr.append(thtds);
     th.append(thtr);
     table.append(th);
@@ -100,7 +132,7 @@ function EditClickEvent(ev){
     });
 
     // create and implement the update button
-    let updateBtn = row.find(".edit-btn");
+    let updateBtn = row.find(".delete-btn");
     updateBtn.html("Update");
     updateBtn.off('click').on('click', function(){
         let data = {};
@@ -110,16 +142,27 @@ function EditClickEvent(ev){
         row.find('td').each(function(index){
             let input = $(this).find('input');
             if(index == 2){
-                fName = input.val();
+                lName = input.val();
             }
             else if(index == 3){
-                lName = input.val();
+                fName = input.val();
             }
             else if(index == 4){
                 schoolId = input.val();
             }
         });
-        AjaxRequest(url + `updateStudent/${id}/${fName}/${lName}/${schoolId}`, "PUT", data, "JSON", UpdateStudentCallBack, ErrorHandler);
+        AjaxRequest(url + `updateStudent/${id}/${fName}/${lName}/${schoolId}`, "PUT", data, "JSON", function(json){
+            if(json.status == "success"){
+                $("#student-table-status").html(`Updated Student: ${id}`);
+                row.find("td").each(function(){
+                    let val = $(this).find("input[type='text']").val();
+                    $(this).html(val);
+                });
+            }
+            else{
+                $("#student-table-status").html(`Failed to Update student: ${id}`);
+            }
+        }, ErrorHandler);
     });
 
     // create and implement the cancel button
@@ -131,18 +174,11 @@ function EditClickEvent(ev){
                 $(this).html(original[index]); // Restore the original content
             }
         });
+        updateBtn.html("Delete");
+        updateBtn.off("click").on("click", DeleteClickEvent)
         cancelBtn.html("Edit"); 
         cancelBtn.off('click').on('click', EditClickEvent); // Rebind the original click event
     });
-}
-
-function UpdateStudentCallBack(json){
-    if(json.status == "success"){
-
-    }
-    else{
-
-    }
 }
 
 // This function populates a class information table

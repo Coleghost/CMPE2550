@@ -68,8 +68,8 @@ function DeleteClickEvent(ev){
     let id = ev.target.id;
     let data = {};
     let row = $(ev.target).closest("tr"); // Find the closest table row
-    AjaxRequest(url + `deleteStudent/${id}`, "POST", data, "JSON", function(json){
-        if (json.success) {
+    AjaxRequest(url + `deleteStudent/${id}`, "DELETE", data, "JSON", function(json){
+        if (json.status == "success") {
             row.remove(); // Remove the row from the table
             $("#student-table-status").html(`Deleted student with ID: ${id}`);
         } 
@@ -100,7 +100,7 @@ function EditClickEvent(ev){
     });
 
     // create and implement the update button
-    let updateBtn = $(".edit-btn");
+    let updateBtn = row.find(".edit-btn");
     updateBtn.html("Update");
     updateBtn.off('click').on('click', function(){
         let data = {};
@@ -119,10 +119,10 @@ function EditClickEvent(ev){
                 schoolId = input.val();
             }
         });
-        AjaxRequest(url + `updateStudent/${id}/${fName}/${lName}/${schoolId}`, "POST", data, "JSON", UpdateStudentCallBack, ErrorHandler);
+        AjaxRequest(url + `updateStudent/${id}/${fName}/${lName}/${schoolId}`, "PUT", data, "JSON", UpdateStudentCallBack, ErrorHandler);
     });
 
-    // create and impletement the cancel button
+    // create and implement the cancel button
     let cancelBtn = $(ev.target);
     cancelBtn.html("Cancel");
     cancelBtn.off('click').on('click', function(){

@@ -1,6 +1,7 @@
 using Microsoft.Data.SqlClient;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks.Dataflow;
 
 namespace coleghost_ica09
 {
@@ -18,7 +19,7 @@ namespace coleghost_ica09
             app.MapGet("/", () => "COLE GHOSTKEEPER ICA09");
 
             // define the connection string
-            string connectionString = "Server = data.cnt.sast.ca,24680; Database = ClassTrak; User Id = demoUser; Password = temP2020#; Encrypt = False;";
+            string connectionString = "Server = data.cnt.sast.ca,24680; Database = cghostkeeper_ClassTrak; User Id = demoUser; Password = temP2020#; Encrypt = False;";
 
             // Hanle the retrieve data endpoint
             app.MapGet("/retrieveData",() =>
@@ -97,26 +98,50 @@ namespace coleghost_ica09
                 });
             });
 
-            app.MapGet("/deleteStudent/{id}", (int id) =>
+            app.MapDelete("/deleteStudent/{id}", (int id) =>
             {
                 SqlConnection connection = new SqlConnection(connectionString);
                 connection.Open();
 
-                string query = "DELETE FROM Students WHERE student_id = @StudentId"; 
-                SqlCommand command = new SqlCommand(query, connection); // create command object with query and connection string
+                // Start a transaction to delete the student
+                SqlTransaction transaction = connection.BeginTransaction();
 
-                command.Parameters.AddWithValue("@StudentId", id); // bind param to query
-
-                int rowsAffected = command.ExecuteNonQuery(); // gets the rows affected and executes query
-                connection.Close();
-                return Results.Json(new
+                try
                 {
-                    status = rowsAffected > 0 ? "success" : "error",
-                    message = rowsAffected > 0 ? "Student deleted successfully" : "Student not found"
-                });
+                    // Delete student from Student Table
+                    string query1 = "DELETE FROM Students WHERE student_id = @StudentId";
+                    SqlCommand command = new SqlCommand(query1, connection); // create command object with query and connection string
+                    command.Parameters.AddWithValue("@StudentId", id); // bind param to query
+                    int rowsAffected = command.ExecuteNonQuery(); // gets the rows affected and executes query
+
+                    // Delete student from class_to_student table
+                    string query2 = "DELETE FROM class_to_student WHERE student_id = @StudentId";
+                    command = new SqlCommand(query2, connection);
+                    command.Parameters.AddWithValue("@StudentId", id);
+                    command.ExecuteNonQuery();
+
+                    // commit transaction
+                    transaction.Commit();
+                    connection.Close();
+                    return Results.Json(new
+                    {
+                        status = rowsAffected > 0 ? "success" : "error",
+                        message = rowsAffected > 0 ? "Student deleted successfully" : "Student not found"
+                    });
+                }
+                catch (Exception e)
+                {
+                    transaction.Rollback();
+                    connection.Close();
+                    return Results.Json(new
+                    {
+                        status = "error",
+                        message = "An Error occured while deleting the student" + e.Message
+                    });
+                }
             });
 
-            app.MapGet("updateStudent/{id}/{fName}/{lName}/{schoolId}", (int id, string fName, string lName, int schoolId) =>
+            app.MapPut("updateStudent/{id}/{fName}/{lName}/{schoolId}", (int id, string fName, string lName, int schoolId) =>
             {
                 if (fName == null || lName == null || schoolId <= 0)
                 {

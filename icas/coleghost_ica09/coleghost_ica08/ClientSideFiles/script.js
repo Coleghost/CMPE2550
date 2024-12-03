@@ -4,20 +4,26 @@ window.onload = function(){
     CreateClassSelect();
     $("#add-student-btn").click(function(ev){
         let data = {};
-        data.fName = $("input-first-name").val();
-        data.lName = $("input-last-name").val();
-        data.schoolId = $("input-school-id").val();
+        data.fName = $("#input-first-name").val();
+        data.lName = $("#input-last-name").val();
+        data.schoolId = $("#input-school-id").val();
         let selectedOptions = $("#select-class option:selected");
-        data.selectedValues = [];
+        data.classIds = [];
         selectedOptions.each(function() {
-            data.selectedValues.push($(this).val());
+            data.classIds.push(Number($(this).val()));
         });
-        AjaxRequest(url + "retrieveData", "GET", data, "JSON", AddStudentCallBack, ErrorHandler);
+        AjaxRequest(url + "addStudent", "POST", data, "JSON", AddStudentCallBack, ErrorHandler);
     });
 }
 
 function AddStudentCallBack(json){
-
+    if(json.status == "success"){
+        $("#add-student-status").html(json.message);
+        GetStudents();
+    }
+    else{
+        $("#add-student-status").html(json.message);
+    }
 }
 
 function CreateClassSelect(){
@@ -25,7 +31,7 @@ function CreateClassSelect(){
     AjaxRequest(url + "getAllClassData", "GET", data, "JSON", function(json){
         let select = $("#select-class");
         // classId classDesc
-        for(let i = 0; i, json.classes.length; i++){
+        for(let i = 0; i < json.classes.length; i++){
             let option = $("<option>").attr({
                 "value" : json.classes[i].classId
                 }
@@ -43,6 +49,7 @@ function GetStudents(){
 // Success function for on load ajax request
 // creates the student table
 function GetStudentsCallBack(json){
+    $("#student-table-div").find('table').remove();
     let table = $("<table>").attr({
         "id" : "student-table"
     });

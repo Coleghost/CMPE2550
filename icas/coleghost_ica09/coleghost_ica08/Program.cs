@@ -8,6 +8,7 @@ namespace coleghost_ica09
     public class Program
     {
         record Data ( int id );
+        record StudentClassData(string fName, string lName, int schoolId, List<int> classIds);
         public static void Main(string[] args)
         {
             // set up builder and controllers
@@ -53,7 +54,7 @@ namespace coleghost_ica09
             });
 
             // This endpoint returns a json object containing class information for a specific student
-            app.MapPost("retrieveClassData", (Data data) =>
+            app.MapPost("/retrieveClassData", (Data data) =>
             {
                 SqlConnection connection = new SqlConnection(connectionString);
                 connection.Open();
@@ -147,7 +148,7 @@ namespace coleghost_ica09
                 }
             });
 
-            app.MapPut("updateStudent/{id}/{fName}/{lName}/{schoolId}", (int id, string fName, string lName, int schoolId) =>
+            app.MapPut("/updateStudent/{id}/{fName}/{lName}/{schoolId}", (int id, string fName, string lName, int schoolId) =>
             {
                 if (fName == null || lName == null || schoolId <= 0)
                 {
@@ -194,7 +195,7 @@ namespace coleghost_ica09
                 }
             });
 
-            app.MapGet("getAllClassData", () =>
+            app.MapGet("/getAllClassData", () =>
             {
                 SqlConnection connection = new SqlConnection(connectionString);
                 connection.Open();
@@ -226,6 +227,63 @@ namespace coleghost_ica09
                     {
                         status = "error",
                         message = "An error occurred while getting class data: " + e.Message
+                    });
+                }
+            });
+
+            app.MapPost("/addStudent", (StudentClassData data) =>{
+                // Validate params
+                if (string.IsNullOrEmpty(data.fName) || string.IsNullOrEmpty(data.lName) || data.schoolId <= 0 || data.classIds == null || data.classIds.Count == 0)
+                {
+                    return Results.Json(new
+                    {
+                        status = "error",
+                        message = "Invalid arguments"
+                    });
+                }
+
+                // add the student to database
+                SqlConnection connection = new SqlConnection(connectionString);
+                connection.Open();
+                SqlTransaction transaction = connection.BeginTransaction();
+
+                try
+                {
+                    // create the query string
+                    // we can use OUTPUT INSERTED.student_id to retrieve the student_id of the newly added student
+                    string query1 = "INSERT INTO Students (first_name, last_name, school_id) OUTPUT INSERTED.student_id VALUES (@firstName, @lastName, @schoolId)";
+                    SqlCommand command1 = new SqlCommand(query1, connection, transaction);
+                    command1.Parameters.AddWithValue("@firstName", data.fName);
+                    command1.Parameters.AddWithValue("@lastName", data.lName);
+                    command1.Parameters.AddWithValue("@schoolId", data.schoolId);
+                    int studentId = (int)command1.ExecuteScalar();
+
+                    // add the student to each selected class
+                    foreach (var id in data.classIds)
+                    {
+                        string query2 = "INSERT INTO class_to_student (class_id, student_id) VALUES (@classId, @studentId)";
+                        SqlCommand command2 = new SqlCommand(query2, connection, transaction);
+                        command2.Parameters.AddWithValue("@classId", id);
+                        command2.Parameters.AddWithValue("@studentId", studentId);
+                        command2.ExecuteNonQuery();
+                    }
+
+                    transaction.Commit();
+                    connection.Close();
+                    return Results.Json(new
+                    {
+                        status = "success",
+                        message = $"Student {studentId} added sucessfully"
+                    });
+                }
+                catch (Exception e)
+                {
+                    transaction.Rollback();
+                    connection.Close();
+                    return Results.Json(new
+                    {
+                        status = "error",
+                        message = "An error occured while adding the student " + e.Message
                     });
                 }
             });

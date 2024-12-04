@@ -1,6 +1,7 @@
 using Microsoft.Data.SqlClient;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks.Dataflow;
 
 namespace coleghost_ica09
@@ -103,7 +104,7 @@ namespace coleghost_ica09
             {
                 SqlConnection connection = new SqlConnection(connectionString);
                 connection.Open();
-
+                string cleanId = Regex.Replace(id.ToString().Trim(), "<.*?|&;>$", string.Empty);
                 // Start a transaction to delete the student
                 SqlTransaction transaction = connection.BeginTransaction();
 
@@ -112,7 +113,7 @@ namespace coleghost_ica09
                     // Delete student from class_to_student table first
                     string query1 = "DELETE FROM class_to_student WHERE student_id = @StudentId";
                     SqlCommand command1 = new SqlCommand(query1, connection, transaction); // associate command with transaction
-                    command1.Parameters.AddWithValue("@StudentId", id); // bind param to query
+                    command1.Parameters.AddWithValue("@StudentId", cleanId); // bind param to query
                     command1.ExecuteNonQuery(); // execute query
 
                     // Delete student from Results table 

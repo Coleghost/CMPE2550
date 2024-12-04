@@ -165,6 +165,11 @@ function EditClickEvent(ev){
                     let val = $(this).find("input[type='text']").val();
                     $(this).html(val);
                 });
+                // place the original buttons back
+                updateBtn.html("Delete");
+                updateBtn.off("click").on("click", DeleteClickEvent)
+                cancelBtn.html("Edit"); 
+                cancelBtn.off('click').on('click', EditClickEvent); // Rebind the original click event
             }
             else{
                 $("#student-table-status").html(`Failed to Update student: ${id}`);

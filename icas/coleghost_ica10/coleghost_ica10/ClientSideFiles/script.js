@@ -4,6 +4,9 @@ window.onload = function(){
     GetLocations();
 }
 
+// Function to submit an ajax request to server
+// expects to receive all locations in the database
+// creates and populates a select control with the data
 function GetLocations(){
     let data = {};
     AjaxRequest(url + 'GetLocations', "GET", data, "JSON", function(data){
@@ -26,6 +29,8 @@ function GetLocations(){
     }, ErrorHandler);
 }
 
+// Submits an ajax request to server
+// expects to receive order data for a specified customer
 function GetOrderDetails(ev){
     let locationId = $(ev.target).val();
     let customerId = $("#input-customer-id").val();
@@ -41,10 +46,14 @@ function GetOrderDetails(ev){
         AjaxRequest(url + `GetOrders/${locationId}/${customerId}`, "GET", data, "JSON", GetOrderDetailsCallback, ErrorHandler);
     }
 }
+
+// Function to create the table
+// from the customers order details
 function GetOrderDetailsCallback(data){
     if(data.length == 0){
         $("#table-div").find("table").remove();
         $("#table-status").find("p").remove();
+        $("#table-div").find("h1").remove();
         let status = $("<p>No data on this Order</p>")
         $("#table-status").html(status);
         return;

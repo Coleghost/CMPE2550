@@ -24,22 +24,27 @@ namespace coleghost_ica10
                 }
             });
 
+            // Handle get request from client side
+            // returns specific customer order information for location provided
             app.MapGet("/GetOrders/{locationId}/{customerId}", (string locationId, string customerId) =>
             {
                 int locId;
                 int custId;
                 try
                 {
+                    // try to get params as an int
                     int.TryParse(locationId, out locId);
                     int.TryParse(customerId, out custId);
                 }
                 catch (Exception)
                 {
+                    // return error message if data is not numeric
                     return new { status = "error", message = "invalid parameters, try again"};
                 }
 
                 using (var db = new CghostkeeperRestaurantDbContext())
                 {
+                    // execute query on db
                     var result = from order in db.Orders
                                  join customer in db.Customers on order.Cid equals customer.Cid
                                  join item in db.Items on order.Itemid equals item.Itemid

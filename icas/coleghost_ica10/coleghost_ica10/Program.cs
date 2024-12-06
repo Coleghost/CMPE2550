@@ -44,12 +44,15 @@ namespace coleghost_ica10
 
                 using (var db = new CghostkeeperRestaurantDbContext())
                 {
-                    // execute query on db
+                    // execute query on db and build result object
                     var result = from order in db.Orders
+                                 // join tables
                                  join customer in db.Customers on order.Cid equals customer.Cid
                                  join item in db.Items on order.Itemid equals item.Itemid
                                  join location in db.Locations on order.Locationid equals location.Locationid
+                                 // filter
                                  where order.Locationid == locId && order.Cid == custId
+                                 // build the result items
                                  select new
                                  {
                                      order.OrderId,
@@ -62,6 +65,7 @@ namespace coleghost_ica10
                                      customer.Fname,
                                      customer.Lname
                                  };
+                    // return the json formatted objects to the client
                     return (object) result.ToList();
                 }
             });

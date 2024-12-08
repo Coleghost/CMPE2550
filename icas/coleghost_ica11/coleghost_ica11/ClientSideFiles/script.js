@@ -2,6 +2,10 @@ const url = "https://localhost:7117/";
 
 window.onload = function(){
     GetLocations();
+    CreateLocationSelect();
+    CreateItemSelect();
+
+    $("#process-btn").click(PlaceOrderHandler);
 }
 
 // Function to submit an ajax request to server
@@ -26,6 +30,34 @@ function GetLocations(){
         }
         label.append(select);
         div.append(label);
+    }, ErrorHandler);
+}
+
+function CreateLocationSelect(){
+    let data = {};
+    AjaxRequest(url + 'GetLocations', "GET", data, "JSON", function(data){
+        // create pickup location select
+        let pickUp = $("#pickup-select")
+        for(let i = 0; i < data.length; i++){
+            let option = $("<option>").attr({
+                "value" : data[i].locationid
+            }).html(data[i].locationName);
+            pickUp.append(option);
+        }
+    }, ErrorHandler);
+}
+
+function CreateItemSelect(){
+    let data = {};
+    AjaxRequest(url + 'GetItems', "GET", data, "JSON", function(data){
+        // create pickup location select
+        let items = $("#item-select")
+        for(let i = 0; i < data.length; i++){
+            let option = $("<option>").attr({
+                "value" : data[i].itemid
+            }).html(`${data[i].itemName} : $${data[i].itemPrice}`);
+            items.append(option);
+        }
     }, ErrorHandler);
 }
 
@@ -75,12 +107,22 @@ function GetOrderDetailsCallback(data){
         <th>Item Name</th>
         <th>Item Price</th>
         <th>Item Count</th>
+        <th>Delete Order</th>
     `);
     thead.append(ths);
     table.append(thead);
     let tbody = $("<tbody>");
     for(let i = 0; i < data.length; i++){
         let tr = $("<tr>");
+        // create the delete button
+        let deleteBtn = $("<button>").attr({
+            "class" : "delete-btn",
+            "orderId" : data[i].orderId,
+            "locationId" : data[i].locationid
+        }).html("Delete");
+        deleteBtn.click(DeleteOrderHandler);
+        let deleteTd = $("<td>").append(deleteBtn);
+
         let tds = $(`
             <td>${data[i].orderId}</td>
             <td>${data[i].orderDate}</td>
@@ -90,10 +132,52 @@ function GetOrderDetailsCallback(data){
             <td>${data[i].itemCount}</td>
         `);
         tr.append(tds);
+        tr.append(deleteTd);
         tbody.append(tr);
     }
     table.append(tbody);
     div.append(table);
+
+}
+
+function DeleteOrderHandler(ev){
+    let btn = $(ev.target);
+    let orderId = btn.attr("orderId");
+    let locationId = btn.attr("locationid");
+    let data = {};
+    AjaxRequest(url + `DeleteOrder/${orderId}/${locationId}`, "DELETE", data, "JSON", function(json){
+        DeleteOrderCallback(json, ev);
+    }, ErrorHandler);
+}
+
+function DeleteOrderCallback(json, ev){
+    let status = $("#table-status");
+    status.html(json.message);
+    if(json.status == "error"){
+        return;
+    }
+    // remove the row from the table
+    $(ev.target).closest("tr").remove();
+    
+}
+
+function PlaceOrderHandler(){
+    // get vals from input
+    let data = {};
+    data.customerId = $("#customer-id-input").val();
+    data.itemId = $("#item-select").val();
+    data.quantity = $("#quantity-input").val();
+    data.paymentType = $("#payment-type-select").val();
+    data.locationId = $("#pickup-select").val();
+
+    if(!data.customerId || data.itemId || data.quantity || data.paymentType || data.locationId){
+        $("#order-status").html("Please provide valid order details");
+        return;
+    }
+    AjaxRequest(url + "PlaceOrder", "POST", data, "JSON", PlaceOrderCallback, ErrorHandler);
+}
+
+function PlaceOrderCallback(json){
 
 }
 

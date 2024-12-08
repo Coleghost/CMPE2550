@@ -14,10 +14,29 @@
         <div id="inner" class="centered">
            <header><h2>Welcome to Tim Hortons</h2></header>
            <div id="input-div">
+            <h3>Enter Details to find an Order</h3>
             <label>Customer Id: <input type="text"id="input-customer-id"></label>
            </div>
            <div id="table-div">
                 <p id="table-status"></p>
+           </div>
+           <div id="order-processing">
+                <h3>Place your Order</h3>
+                <!-- <label>Order Id: <input type="text" id="order-id-input" hidden></label> -->
+                <label>Customer Id: <input type="text" id="customer-id-input"></label>
+                <label>Item: <select id="item-select"></select></label>
+                <label>Quantity: <input type="number" id="quantity-input"></label>
+                <label>Payment Type: 
+                    <select name="" id="payment-type-select">
+                        <option value="Cash">Cash</option>
+                        <option value="Credit">Credit</option>
+                        <option value="Debit">Debit</option>
+                        <option value="GiftCard">GiftCard</option>
+                    </select>
+                </label>
+                <label>Pickup Location: <select id="pickup-select"></select></label>
+                <button id="process-btn">Place Order</button>
+                <p id="order-status"></p>
            </div>
         </div>
     </div>

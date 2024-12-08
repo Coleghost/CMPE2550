@@ -39,3 +39,11 @@ table th, table td {
     flex-direction: column;
     gap: 20px;
 }
+#order-processing{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 3px solid #500101;
+    border-radius: 10px;
+    padding: 20px;
+}

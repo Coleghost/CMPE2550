@@ -8,7 +8,9 @@ namespace coleghost_ica11
 {
     public class Program
     {
-        record OrderData(string custId, string itemId, string quantity, string paymentType, string locationId);
+        public static Random random = new Random();
+        record OrderData(string customerId, string itemId, string quantity, string paymentType, string locationId);
+        record UpdateData(string customerId, string itemId, string quantity, string paymentType, string locationId, int orderId);
         public static void Main(string[] args)
         {
             // set up builder and controllers
@@ -149,10 +151,13 @@ namespace coleghost_ica11
                 }
             });
 
+            // Handle Post request from client
+            // returns a status and message containing info on query result
+            // if successful a new order is created in the database
             app.MapPost("/PlaceOrder", (OrderData data) =>
             {
                 // Sanitize input data
-                string cleanCustId = Regex.Replace(data.custId.Trim(), @"<.*?|&;>$", string.Empty);
+                string cleanCustId = Regex.Replace(data.customerId.Trim(), @"<.*?|&;>$", string.Empty);
                 string cleanItemId = Regex.Replace(data.itemId.Trim(), @"<.*?|&;>$", string.Empty);
                 string cleanQuantity = Regex.Replace(data.quantity.Trim(), @"<.*?|&;>$", string.Empty);
                 string cleanPaymentType = Regex.Replace(data.paymentType.Trim(), @"<.*?|&;>$", string.Empty);
@@ -238,7 +243,119 @@ namespace coleghost_ica11
                         return Results.Json(new
                         {
                             status = "success",
-                            message = "Order placed successfully"
+                            message = "Order placed successfully",
+                            id = order.OrderId,
+                            eta = random.Next(5, 31)
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return Results.Json(new
+                    {
+                        status = "error",
+                        message = $"An error occurred: {ex.Message}"
+                    });
+                }
+            });
+
+            // Handle PUT request from client
+            // returns a status and message containing info on query result
+            // if successful an existing order is updated
+            app.MapPut("/UpdateOrder", (UpdateData data) =>
+            {
+                // Sanitize input data
+                string cleanCustId = Regex.Replace(data.customerId.Trim(), @"<.*?|&;>$", string.Empty);
+                string cleanItemId = Regex.Replace(data.itemId.Trim(), @"<.*?|&;>$", string.Empty);
+                string cleanQuantity = Regex.Replace(data.quantity.Trim(), @"<.*?|&;>$", string.Empty);
+                string cleanPaymentType = Regex.Replace(data.paymentType.Trim(), @"<.*?|&;>$", string.Empty);
+                string cleanLocationId = Regex.Replace(data.locationId.Trim(), @"<.*?|&;>$", string.Empty);
+                string cleanOrderId = Regex.Replace(data.orderId.ToString().Trim(), @"<.*?|&;>$", string.Empty);
+
+                int custId, itemId, quantity, locationId, orderId;
+
+                // Tryparse to parse the sanitized data
+                if (!int.TryParse(cleanCustId, out custId) || custId <= 0)
+                {
+                    return Results.Json(new
+                    {
+                        status = "error",
+                        message = "Customer Id is invalid"
+                    });
+                }
+
+                if (!int.TryParse(cleanItemId, out itemId) || itemId <= 0)
+                {
+                    return Results.Json(new
+                    {
+                        status = "error",
+                        message = "Item Id is invalid"
+                    });
+                }
+
+                if (!int.TryParse(cleanQuantity, out quantity) || quantity <= 0)
+                {
+                    return Results.Json(new
+                    {
+                        status = "error",
+                        message = "Quantity is invalid"
+                    });
+                }
+
+                if (!int.TryParse(cleanLocationId, out locationId) || locationId <= 0)
+                {
+                    return Results.Json(new
+                    {
+                        status = "error",
+                        message = "Location Id is invalid"
+                    });
+                }
+
+                if (!int.TryParse(cleanOrderId, out orderId) || orderId <= 0)
+                {
+                    return Results.Json(new
+                    {
+                        status = "error",
+                        message = "Order Id is invalid"
+                    });
+                }
+
+                if (cleanPaymentType == "")
+                {
+                    return Results.Json(new
+                    {
+                        status = "error",
+                        message = "Payment Type is invalid"
+                    });
+                }
+                // try to execute the update query
+                try
+                {
+                    using (var db = new CghostkeeperRestaurantDbContext())
+                    {
+                        var order = db.Orders.FirstOrDefault(o => o.OrderId == orderId && o.Locationid == locationId);
+                        if (order == null)
+                        {
+                            return Results.Json(new
+                            {
+                                status = "error",
+                                message = "Could not find that order!"
+                            });
+                        }
+                        // make changes to the order
+                        order.Itemid = itemId;
+                        order.ItemCount = quantity;
+                        order.PaymentMethod = cleanPaymentType;
+
+                        // update the order
+                        db.Orders.Update(order);
+                        db.SaveChanges();
+
+                        return Results.Json(new
+                        {
+                            status = "success",
+                            message = "Order Updated successfully",
+                            id = order.OrderId,
                         });
                     }
                 }

@@ -170,7 +170,7 @@ function PlaceOrderHandler(){
     data.paymentType = $("#payment-type-select").val();
     data.locationId = $("#pickup-select").val();
 
-    if(!data.customerId || data.itemId || data.quantity || data.paymentType || data.locationId){
+    if(!data.customerId || !data.itemId || !data.quantity || !data.paymentType || !data.locationId){
         $("#order-status").html("Please provide valid order details");
         return;
     }
@@ -178,7 +178,43 @@ function PlaceOrderHandler(){
 }
 
 function PlaceOrderCallback(json){
+    // display error message in status if order was not processed
+    if(json.status == "error"){
+        $("#order-status").html(json.message);
+        return;
+    }
+    // successful order created
+    $("#order-status").html(`${json.message}, order ${json.id} will be ready in ${json.eta} minutes. Thank you`);
+    // edit ui to make some inputs read only
+    $("#customer-id-input").attr("readonly", true);
+    $("#pickup-select").attr("disabled", true);
+    // change the text and event for the process button
+    let btn = $("#process-btn");
+    btn.off(); // remove the add event
+    btn.html("Update Order");
+    // create the update order function
+    btn.click(function(ev){
 
+        // get vals from input
+        let data = {};
+        data.customerId = $("#customer-id-input").val();
+        data.itemId = $("#item-select").val();
+        data.quantity = $("#quantity-input").val();
+        data.paymentType = $("#payment-type-select").val();
+        data.locationId = $("#pickup-select").val();
+        data.orderId = json.id;
+
+        if(!data.customerId || !data.itemId || !data.quantity || !data.paymentType || !data.locationId){
+            $("#order-status").html("Please provide valid order details");
+            return;
+        }
+        AjaxRequest(url + "UpdateOrder", "PUT", data, "JSON", UpdateOrderCallback, ErrorHandler);
+    });
+}
+
+function UpdateOrderCallback(json){
+    $("#order-status").html(json.message);
+    $("#process-btn").attr("disabled", true);
 }
 
 // Use this function to make an ajax call
